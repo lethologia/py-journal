@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>py-journal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>py-journal</h1>
+
+    <div id="news-container">
+    {% if news_articles %}
+        {% for article in news_articles %}
+        <div class="news-item">
+            <h2>{{ article.title }}</h2>
+             <p>{{ article.summary }}</p>
+             <small>Source: {{article.source}} </small>
+
+        </div>
+        {% endfor %}
+    {% else %}
+    <p>Failed to retrieve tech news from the API</p>
+    {% endif %}
+    </div>
+</body>
+</html>
