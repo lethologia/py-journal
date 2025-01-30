@@ -1,0 +1,24 @@
+{
+  "name": "py-journal",
+  "version": "1.0.0",
+  "description": "All the latest (tech) news, tailored to your interests.",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "npx @tailwindcss/cli -i ./static/css/input.css -o ./static/css/style.css --watch",
+    "start": "flask run --debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lethologia/py-journal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lethologia/py-journal/issues"
+  },
+  "homepage": "https://github.com/lethologia/py-journal#readme",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.0.1"
+  }
+}

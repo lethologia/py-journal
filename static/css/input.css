@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+    --font-heading: Kumar One, serif;
+    --font-sans: InterVariable, sans-serif;
+}
