@@ -1,8 +1,16 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
+from flask_caching import Cache
 import requests
 import os
+import json
 
+cache = Cache(config = {
+    "DEBUG": True,
+    "CACHE_TYPE": "SimpleCache",
+    "CACHE_DEFAULT_TIMEOUT": 300
+})
 app = Flask(__name__)
+cache.init_app(app)
 
 GEMINI_KEY = os.environ.get("GEMINI_API_KEY")
 UNSPLASH_KEY = os.environ.get("UNSPLASH_ACCESS_KEY")
@@ -14,7 +22,7 @@ if not GEMINI_KEY or not UNSPLASH_KEY:
 unsplash_api_endpoint = f"https://api.unsplash.com/photos/random?client_id={UNSPLASH_KEY}"
 
 # configure gemini model
-model = "gemini-1.5-flash"
+model = "gemini-1.5-flash-8b"
 gemini_api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}"
 
 # gemini request parameters
@@ -24,23 +32,41 @@ headers = {
 
 system_instruction = {
     "parts": { 
-        "text": "You are a journalist for a tech article which posts about the latest tech news. You cater primarily to engineers, and others with similar context"
+        "text": """You are a journalist for a tech article. 
+        The article caters to people with a technical background like engineers. 
+        When prompted with a topic, and number of articles, respond with the following JSON schema:
+        
+        [
+        {
+            "title": string,
+            "summary": string,
+            "date": string,
+            "image_url": string,
+        }
+        ]        
+        
+        where:
+        - image_url is a thumbnail image for the article.
+        """
     }
 }
 
 contents = {
     "parts": {
-        "text": "What are 12 tech articles regarding news of the last month?"
+        "text": "Show me 6 articles about tech news from the last month."
     }
 }
 
 tools = [{
     "google_search_retrieval": {
-        "mode": "MODE_DYNAMIC",
-        "dynamic_threshold": 0.4
+        "dynamic_retrieval_config": {
+            "mode": "MODE_DYNAMIC",
+            "dynamic_threshold": 0.4
+        }
     }
 }]
 
+"""
 gen_cfg = {
     "response_mime_type": "application/json",
     "response_schema": {
@@ -57,28 +83,43 @@ gen_cfg = {
         }
     }
 }
+"""
 
 params = {
     "system_instruction": system_instruction,
     "contents": contents,
     "tools": tools,
-    "generationConfig": gen_cfg
+    #"generationConfig": gen_cfg
 }
 
+def test():
+    response = requests.post(gemini_api_endpoint, headers=headers, json=params)
+    #print(response.text)
+    print(response.status_code)
+
+    json_txt = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    json_txt = json_txt.split("```json")[1].split("```")[0]
+    jsn = json.loads(json_txt)
+    print(jsn)
+
+@cache.cached(timeout=600, key_prefix="fetch_news")
 def fetch_tech_news():
     news = []
 
     # make API request for news in JSON
     try:
         # make and validate get request
-        response = requests.get(gemini_api_endpoint, headers=headers, params=params)
+        response = requests.post(gemini_api_endpoint, headers=headers, json=params)
         response.raise_for_status()
 
         # parse json response
         try:
-            article_list = response.json()
-            if len(article_list) != 0:
-                print("Recieved empty gemini response.")
+            json_txt = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            json_txt = json_txt.split("```json")[1].split("```")[0]
+
+            article_list = json.loads(json_txt)
+            if len(article_list) == 0:
+                print("Received empty gemini response.")
             else:
                 for article_json in article_list:
                     # Process article
@@ -89,7 +130,7 @@ def fetch_tech_news():
                     }
 
                     # If image missing, replace with placeholder
-                    if "image_url" not in article_json:
+                    if "image_url" in article_json:
                         unsplash_params = {
                             "collections": "DR5Mh4ituPY"
                         }
@@ -97,10 +138,10 @@ def fetch_tech_news():
 
                         # error handling...
 
-                        img_url = response.json()["urls"]["regular"]
+                        img_url = img_response.json()["urls"]["regular"]
                         article["image_url"] = img_url
-                    else:
-                        article["image_url"] = article_json["image_url"]
+                    #else:
+                    #    article["image_url"] = article_json["image_url"]
 
                     # append article to news list
                     news.append(article)
@@ -119,3 +160,4 @@ def index():
 
 if __name__=="__main__":
     app.run(debug=True, port=5001)
+    #test()

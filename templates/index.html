@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>py-journal</title>
 
+    <link rel="icon" href="{{ url_for('static', filename='img/paper-icon.png') }}" type="image/x-icon">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet"href="https://fonts.googleapis.com/css2?family=Kumar+One&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kumar+One&display=swap">
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
@@ -17,7 +19,7 @@
     <header class="bg-white border-b border-gray-200 py-6">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-center">
-                <img src="{{ url_for('static', filename='img/paper-icon.jpg') }}" alt="Newspaper Icon" class="h-16 w-auto mr-1">
+                <img src="{{ url_for('static', filename='img/paper-icon.png') }}" alt="Newspaper Icon" class="h-16 w-auto mr-1">
                 <h1 class="text-3xl font-heading text-black">py-journal</h1>
             </div>
         </div>
@@ -41,19 +43,23 @@
 
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
 
-            {% for article in articles %}
-            <!-- Article Block  -->
-            <article class="bg-white rounded-md shadow-md overflow-hidden">
-                <img src="{{ article.image_url }}" alt="Article Image" class="w-full h-40 object-cover">
-                <div class="p-4">
-                    <h3 class="text-lg font-semibold text-black hover:text-blue-500 mb-2"><a href="#">{{ article.title }}</a></h3>
-                    <p class="text-gray-700 text-sm mb-3">{{ article.summary }}</p>
-                    <div class="flex items-center justify-between text-gray-500 text-xs">
-                        <span>{{ article.date }}</span>
-                    </div>
-                </div>
-            </article>
-            {% endfor %}
+            {% if articles|length != 0 %}
+                {% for article in articles %}
+                <!-- Article Block  -->
+                    <article class="bg-white rounded-md shadow-md overflow-hidden">
+                        <img src="{{ article.image_url }}" alt="Article Image" class="w-full h-40 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-black hover:text-blue-500 mb-2"><a href="#">{{ article.title }}</a></h3>
+                            <p class="text-gray-700 text-sm mb-3">{{ article.summary }}</p>
+                            <div class="flex items-center justify-between text-gray-500 text-xs">
+                                <span>{{ article.date }}</span>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p>err</p>
+            {% endif %}
 
         </section>
     </main>
